@@ -44,13 +44,49 @@ jobs:
         run: |
           find app/src/main/res -type f \( -iname 'abc_*.xml' -o -iname 'abc_*.png' \) -print -delete
 
+      - name: Decode compiled Android XML resources
+        working-directory: ${{ steps.locate.outputs.root }}
+        run: |
+          python3 -m pip install --quiet axml
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import tempfile
+          import os
+
+          decoded = 0
+          failed = []
+          for p in Path("app/src/main").rglob("*.xml"):
+              data = p.read_bytes()
+              if len(data) >= 4 and data[:4] == bytes.fromhex("03000800"):
+                  with tempfile.NamedTemporaryFile(delete=False) as out:
+                      tmp = out.name
+                  try:
+                      r = subprocess.run(["axml", "-i", str(p), "-o", tmp], capture_output=True, text=True)
+                      if r.returncode == 0 and Path(tmp).exists() and Path(tmp).stat().st_size > 0:
+                          p.write_bytes(Path(tmp).read_bytes())
+                          decoded += 1
+                          print("Decoded AXML:", p)
+                      else:
+                          failed.append((str(p), r.stderr[-500:]))
+                  finally:
+                      try: os.unlink(tmp)
+                      except FileNotFoundError: pass
+
+          print("AXML files decoded:", decoded)
+          if failed:
+              print("AXML decode failures:")
+              for item in failed:
+                  print(item)
+              raise SystemExit(1)
+          PY
+
       - name: Repair malformed XML resource encoding
         working-directory: ${{ steps.locate.outputs.root }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import xml.etree.ElementTree as ET
-          import re
 
           bad = []
           for p in Path("app/src/main/res").rglob("*.xml"):
