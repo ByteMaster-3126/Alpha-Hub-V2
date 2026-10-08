@@ -69,8 +69,9 @@ jobs:
 
               try:
                   r = subprocess.run(["axml", "-i", str(p)], capture_output=True, text=True)
-                  if "<" not in r.stdout or ">" not in r.stdout:
-                      failed.append((str(p), "axml command failed: " + r.stderr[-300:]))
+                  output = r.stdout + "\n" + r.stderr
+                  if "<" not in output or ">" not in output:
+                      failed.append((str(p), "axml produced no XML payload: " + output[-500:]))
                       continue
 
                   xml_text = output[output.find("<"):output.rfind(">") + 1]
