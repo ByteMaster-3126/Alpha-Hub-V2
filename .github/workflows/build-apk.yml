@@ -19,21 +19,25 @@ jobs:
           rm -rf extracted
           mkdir extracted
           unzip -q CircleSidebar_AndroidForge.zip -d extracted
-          echo "Extracted files:"
-          find extracted -maxdepth 3 -type f | head -200
 
       - name: Locate Gradle project
         id: locate
         shell: bash
         run: |
-          ROOT=$(find "$GITHUB_WORKSPACE/extracted" -type f -name gradlew -print -quit | xargs -r dirname)
+          ROOT=$(find "$GITHUB_WORKSPACE/extracted" -type f -name settings.gradle -print -quit | xargs -r dirname)
           if [ -z "$ROOT" ]; then
-            echo "No gradlew found. Project contents:"
-            find "$GITHUB_WORKSPACE/extracted" -maxdepth 5 -type f | sort | head -500
+            echo "No settings.gradle found."
+            find "$GITHUB_WORKSPACE/extracted" -maxdepth 6 -type f | sort | head -500
             exit 1
           fi
           echo "root=$ROOT" >> "$GITHUB_OUTPUT"
           echo "Gradle root: $ROOT"
+          echo "===== settings.gradle ====="
+          cat "$ROOT/settings.gradle"
+          echo "===== build.gradle ====="
+          cat "$ROOT/build.gradle"
+          echo "===== app/build.gradle ====="
+          cat "$ROOT/app/build.gradle"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -43,12 +47,13 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
 
       - name: Build existing project
         working-directory: ${{ steps.locate.outputs.root }}
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          gradle assembleDebug --stacktrace
 
       - name: Collect APK
         run: |
