@@ -78,7 +78,7 @@ jobs:
                   p.write_text(xml_text, encoding="utf-8")
                   decoded += 1
               except Exception as e:
-                  failed.append((str(p), repr(e)))
+                  failed.append((str(p), "parse/write failure: " + repr(e) + " | output_head=" + repr(r.stdout[:1000])))
               finally:
                   try:
                       os.unlink(tmp)
