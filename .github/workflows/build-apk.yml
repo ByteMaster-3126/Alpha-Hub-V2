@@ -44,6 +44,45 @@ jobs:
         run: |
           find app/src/main/res -type f \( -iname 'abc_*.xml' -o -iname 'abc_*.png' \) -print -delete
 
+      - name: Repair malformed XML resource encoding
+        working-directory: ${{ steps.locate.outputs.root }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          import re
+
+          bad = []
+          for p in Path("app/src/main/res").rglob("*.xml"):
+              raw = p.read_bytes()
+              try:
+                  ET.fromstring(raw)
+                  continue
+              except Exception:
+                  pass
+
+              text = raw.decode("utf-8", errors="ignore")
+              first = text.find("<")
+              if first >= 0:
+                  text = text[first:]
+              text = "".join(ch for ch in text if ch in "\\t\\n\\r" or ord(ch) >= 32)
+
+              try:
+                  ET.fromstring(text.encode("utf-8"))
+              except Exception as e:
+                  bad.append((str(p), repr(e), raw[:64].hex()))
+                  continue
+
+              p.write_bytes(text.encode("utf-8"))
+              print("Repaired:", p)
+
+          if bad:
+              print("Unrepairable XML resources:")
+              for item in bad:
+                  print(item)
+              raise SystemExit(1)
+          PY
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
