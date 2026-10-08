@@ -43,7 +43,7 @@ jobs:
       - name: Decode compiled Android XML resources
         working-directory: ${{ steps.locate.outputs.root }}
         run: |
-          curl -L --fail -o /tmp/AXMLPrinter2.jar https://github.com/digitalsleuth/AXMLPrinter2/raw/master/AXMLPrinter2.jar
+          curl -L --fail -o /tmp/AXMLPrinter2.jar https://github.com/digitalsleuth/AXMLPrinter2/raw/refs/heads/main/AXMLPrinter2.jar
           python3 - <<'PY'
           from pathlib import Path
           import subprocess
