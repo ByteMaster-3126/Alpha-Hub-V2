@@ -56,7 +56,7 @@ jobs:
 
           decoded = 0
           failed = []
-          for p in Path("app/src/main").rglob("*.xml"):
+          paths = list(Path("app/src/main/res").rglob("*.xml")) + [Path("app/src/main/AndroidManifest.xml")]\n          for p in paths:
               data = p.read_bytes()
               if len(data) >= 4 and data[:4] == bytes.fromhex("03000800"):
                   with tempfile.NamedTemporaryFile(delete=False) as out:
