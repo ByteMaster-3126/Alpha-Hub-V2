@@ -81,6 +81,44 @@ jobs:
               raise SystemExit(1)
           PY
 
+      - name: Resolve decoded resource IDs
+        working-directory: ${{ steps.locate.outputs.root }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import xml.etree.ElementTree as ET
+
+          mapping = {}
+          for p in Path("app/src/main/res").glob("values*/public.xml"):
+              try:
+                  root = ET.parse(p).getroot()
+              except Exception:
+                  continue
+              for e in root.findall("public"):
+                  rid = e.get("id", "")
+                  if rid.lower().startswith("0x"):
+                      mapping[rid[2:].upper()] = f"{e.get('type')}/{e.get('name')}"
+
+          print("Resource IDs available:", len(mapping))
+
+          pat = re.compile(r"([@?])\\*?(?:0x)?([0-9A-Fa-f]{8})")
+          changed = 0
+          for p in Path("app/src/main/res").rglob("*.xml"):
+              s = p.read_text(encoding="utf-8", errors="ignore")
+              def repl(m):
+                  prefix, rid = m.group(1), m.group(2).upper()
+                  name = mapping.get(rid)
+                  if not name:
+                      return m.group(0)
+                  return prefix + name
+              ns = pat.sub(repl, s)
+              if ns != s:
+                  p.write_text(ns, encoding="utf-8")
+                  changed += 1
+          print("XML files with resolved resource references:", changed)
+          PY
+
       - name: Repair malformed XML resource encoding
         working-directory: ${{ steps.locate.outputs.root }}
         run: |
