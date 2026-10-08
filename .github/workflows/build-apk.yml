@@ -62,7 +62,7 @@ jobs:
                   with tempfile.NamedTemporaryFile(delete=False) as out:
                       tmp = out.name
                   try:
-                      r = subprocess.run(["axml", "-i", str(p), "-o", tmp], capture_output=True, text=True)
+                      r = subprocess.run(["axml", "-i", str(p)], capture_output=True, text=True)
                       if r.returncode == 0 and Path(tmp).exists() and Path(tmp).stat().st_size > 0:
                           p.write_bytes(Path(tmp).read_bytes())
                           decoded += 1
