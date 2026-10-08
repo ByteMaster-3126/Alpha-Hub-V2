@@ -39,14 +39,10 @@ jobs:
           echo "===== app/build.gradle ====="
           cat "$ROOT/app/build.gradle"
 
-      - name: Repair invalid PNG text metadata
+      - name: Remove corrupted duplicate AppCompat resources
         working-directory: ${{ steps.locate.outputs.root }}
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq pngcrush
-          find app/src/main/res -type f -iname '*.png' -print0 | while IFS= read -r -d '' f; do
-            pngcrush -q -rem text -ow "$f" || true
-          done
+          find app/src/main/res -type f \( -iname 'abc_*.xml' -o -iname 'abc_*.png' \) -print -delete
 
       - name: Set up Java
         uses: actions/setup-java@v4
