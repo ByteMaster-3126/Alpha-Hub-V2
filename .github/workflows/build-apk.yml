@@ -56,7 +56,8 @@ jobs:
 
           decoded = 0
           failed = []
-          paths = list(Path("app/src/main/res").rglob("*.xml")) + [Path("app/src/main/AndroidManifest.xml")]\n          for p in paths:
+          paths = list(Path("app/src/main/res").rglob("*.xml")) + [Path("app/src/main/AndroidManifest.xml")]
+          for p in paths:
               data = p.read_bytes()
               if len(data) >= 4 and data[:4] == bytes.fromhex("03000800"):
                   with tempfile.NamedTemporaryFile(delete=False) as out:
@@ -139,7 +140,8 @@ jobs:
               first = text.find("<")
               if first >= 0:
                   text = text[first:]
-              text = "".join(ch for ch in text if ch in "\\t\\n\\r" or ord(ch) >= 32)
+              text = "".join(ch for ch in text if ch in "\\t\
+\\r" or ord(ch) >= 32)
 
               try:
                   ET.fromstring(text.encode("utf-8"))
