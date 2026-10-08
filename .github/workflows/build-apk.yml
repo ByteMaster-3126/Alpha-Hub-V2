@@ -43,7 +43,7 @@ jobs:
       - name: Decode compiled Android XML resources
         working-directory: ${{ steps.locate.outputs.root }}
         run: |
-          python3 -m pip install --quiet axml
+          curl -L --fail -o /tmp/AXMLPrinter2.jar https://github.com/digitalsleuth/AXMLPrinter2/raw/master/AXMLPrinter2.jar
           python3 - <<'PY'
           from pathlib import Path
           import subprocess
@@ -64,32 +64,29 @@ jobs:
               if data[:4] != bytes.fromhex("03000800"):
                   continue
 
-              with tempfile.NamedTemporaryFile(delete=False) as out:
-                  tmp = out.name
+              out = subprocess.run(
+                  ["java", "-jar", "/tmp/AXMLPrinter2.jar", str(p)],
+                  capture_output=True, text=True
+              )
+              xml_text = out.stdout
+              if "<" not in xml_text or ">" not in xml_text:
+                  failed.append((str(p), out.stderr[-500:]))
+                  continue
 
+              xml_text = xml_text[xml_text.find("<"):xml_text.rfind(">") + 1]
               try:
-                  r = subprocess.run(["axml", "-i", str(p)], capture_output=True, text=True)
-                  output = r.stdout + "\n" + r.stderr
-                  if "<" not in output or ">" not in output:
-                      failed.append((str(p), "axml produced no XML payload: " + output[-500:]))
-                      continue
-
-                  xml_text = output[output.find("<"):output.rfind(">") + 1]
                   ET.fromstring(xml_text.encode("utf-8"))
-                  p.write_text(xml_text, encoding="utf-8")
-                  decoded += 1
               except Exception as e:
-                  failed.append((str(p), "parse/write failure: " + repr(e) + " | output_head=" + repr(output[:1000])))
-              finally:
-                  try:
-                      os.unlink(tmp)
-                  except FileNotFoundError:
-                      pass
+                  failed.append((str(p), repr(e), repr(xml_text[:500])))
+                  continue
+
+              p.write_text(xml_text, encoding="utf-8")
+              decoded += 1
 
           print("Decoded AXML files:", decoded)
           if failed:
               print("AXML decode failures:")
-              for item in failed:
+              for item in failed[:30]:
                   print(item)
               raise SystemExit(1)
           PY
