@@ -73,12 +73,12 @@ jobs:
                       failed.append((str(p), "axml command failed: " + r.stderr[-300:]))
                       continue
 
-                  xml_text = r.stdout[r.stdout.find("<"):r.stdout.rfind(">") + 1]
+                  xml_text = output[output.find("<"):output.rfind(">") + 1]
                   ET.fromstring(xml_text.encode("utf-8"))
                   p.write_text(xml_text, encoding="utf-8")
                   decoded += 1
               except Exception as e:
-                  failed.append((str(p), "parse/write failure: " + repr(e) + " | output_head=" + repr(r.stdout[:1000])))
+                  failed.append((str(p), "parse/write failure: " + repr(e) + " | output_head=" + repr(output[:1000])))
               finally:
                   try:
                       os.unlink(tmp)
