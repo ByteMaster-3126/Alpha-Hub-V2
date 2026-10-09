@@ -3,6 +3,8 @@ package com.alphahub.v2;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -41,6 +43,7 @@ public class HomeView extends View {
     private final Runnable close;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float density;
+    private final Bitmap logoBitmap;
     private final int touchSlop;
     private final Map<String, Drawable> iconCache = new HashMap<>();
     private final Map<String, Boolean> missingIcons = new HashMap<>();
@@ -77,6 +80,10 @@ public class HomeView extends View {
         super(context);
         close = closeAction;
         density = getResources().getDisplayMetrics().density;
+        Bitmap decodedLogo;
+        try { decodedLogo = BitmapFactory.decodeResource(getResources(), R.drawable.alpha_logo); }
+        catch (RuntimeException ignored) { decodedLogo = null; }
+        logoBitmap = decodedLogo;
         touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         setFocusable(true);
@@ -92,13 +99,13 @@ public class HomeView extends View {
 
         // Scale the page to the available overlay height while respecting Android density.
         unit = Math.max(density * 0.72f, Math.min(density, height / 760.0f));
-        railWidth = Math.max(48 * unit, Math.min(102 * unit, width * 0.145f));
+        railWidth = Math.max(48 * unit, Math.min(102 * unit, width * 0.164f));
         contentLeft = railWidth + 13 * unit;
         contentRight = width - 15 * unit;
         headerTop = 12 * unit;
-        searchTop = headerTop + 70 * unit;
-        bodyTop = searchTop + 49 * unit + 9 * unit;
-        navTop = height - 62 * unit;
+        searchTop = headerTop + 85 * unit;
+        bodyTop = searchTop + 55 * unit + 5 * unit;
+        navTop = height - 75 * unit;
 
         canvas.drawColor(BG);
         drawMainFrame(canvas, width, height);
@@ -106,16 +113,16 @@ public class HomeView extends View {
         drawHeader(canvas, width);
         drawSearch(canvas);
 
-        float favY = bodyTop + 7 * unit;
-        float favH = 124 * unit;
-        float webY = favY + favH + 9 * unit;
-        float webH = 108 * unit;
+        float favY = bodyTop + 3 * unit;
+        float favH = 170 * unit;
+        float webY = favY + favH + 8 * unit;
+        float webH = 129 * unit;
         float recentY = webY + webH + 9 * unit;
-        float recentH = 160 * unit;
-        float settingsY = recentY + recentH + 9 * unit;
-        float settingsH = 98 * unit;
+        float recentH = 188 * unit;
+        float settingsY = recentY + recentH + 7 * unit;
+        float settingsH = 90 * unit;
         float contentEnd = settingsY + settingsH + 6 * unit;
-        float bodyBottom = navTop - 7 * unit;
+        float bodyBottom = navTop - 4 * unit;
 
         maxScroll = Math.max(0, contentEnd - bodyBottom);
         scrollY = Math.max(0, Math.min(scrollY, maxScroll));
@@ -159,55 +166,53 @@ public class HomeView extends View {
     }
 
     private void drawSideRail(Canvas c, float w, float h) {
-        float left = 8 * unit;
-        float right = railWidth - 7 * unit;
+        float left = 6 * unit;
+        float right = railWidth - 6 * unit;
         drawCard(c, left, 9 * unit, right, h - 9 * unit,
                 25 * unit, Color.rgb(3, 9, 28), WHITE, 1.3f * unit);
 
         float center = (left + right) / 2f;
         float toolSize = 43 * unit;
-        drawCard(c, center - toolSize / 2, 17 * unit,
-                center + toolSize / 2, 17 * unit + toolSize,
+        float toolTop = 27 * unit;
+        drawCard(c, center - toolSize / 2, toolTop,
+                center + toolSize / 2, toolTop + toolSize,
                 12 * unit, Color.rgb(5, 20, 51), BLUE, 1.5f * unit);
-        drawSmallSquareIcon(c, center, 17 * unit + toolSize / 2, 20 * unit);
-        drawText(c, "Tools", center, 17 * unit + toolSize + 19 * unit,
+        drawSmallSquareIcon(c, center, toolTop + toolSize / 2, 20 * unit);
+        drawText(c, "Tools", center, toolTop + toolSize + 19 * unit,
                 13.5f * unit, WHITE, true, Paint.Align.CENTER);
 
-        float translateTop = 91 * unit;
+        float translateTop = 113 * unit;
         float translateSize = 38 * unit;
         drawCard(c, center - translateSize / 2, translateTop,
                 center + translateSize / 2, translateTop + translateSize,
                 11 * unit, Color.rgb(5, 22, 49), BLUE, 1.3f * unit);
         drawText(c, "文A", center, translateTop + 26 * unit,
                 21 * unit, CYAN, false, Paint.Align.CENTER);
-        drawText(c, "Screen", center, translateTop + translateSize + 15 * unit,
+        drawText(c, "Screen", center, translateTop + translateSize + 18 * unit,
                 11.5f * unit, WHITE, true, Paint.Align.CENTER);
-        drawText(c, "translation", center, translateTop + translateSize + 29 * unit,
+        drawText(c, "translation", center, translateTop + translateSize + 33 * unit,
                 10.5f * unit, WHITE, true, Paint.Align.CENTER);
 
-        float editTop = h - 131 * unit;
-        float placeholderTop = translateTop + translateSize + 56 * unit;
-        float placeholderH = 40 * unit;
-        float availableStep = (editTop - placeholderTop - placeholderH) / 4f;
-        float step = Math.max(42 * unit, Math.min(61 * unit, availableStep));
+        float placeholderTop = translateTop + translateSize + 70 * unit;
+        float placeholderH = 48 * unit;
+        float step = 75 * unit;
         for (int i = 0; i < 5; i++) {
             float top = placeholderTop + i * step;
-            if (top + placeholderH > editTop - 5 * unit) break;
-            drawCard(c, left + 16 * unit, top, right - 16 * unit,
+            drawCard(c, left + 6 * unit, top, right - 6 * unit,
                     top + placeholderH, 10 * unit,
                     Color.rgb(7, 24, 55), Color.rgb(35, 77, 135), 1 * unit);
         }
 
-        float editCenterY = h - 108 * unit;
+        float editCenterY = h * 0.755f;
         drawCircleButton(c, center, editCenterY, 24 * unit, Color.rgb(4, 21, 50), BLUE);
         drawText(c, "✎", center, editCenterY + 8 * unit,
                 27 * unit, WHITE, false, Paint.Align.CENTER);
-        drawText(c, "Edit", center, editCenterY + 39 * unit,
+        drawText(c, "Edit", center, editCenterY + 35 * unit,
                 13 * unit, WHITE, true, Paint.Align.CENTER);
 
-        float backY = h - 42 * unit;
+        float backY = h * 0.888f;
         drawCircleButton(c, center, backY, 22 * unit, Color.rgb(8, 27, 61), BLUE);
-        drawText(c, "‹", center, backY + 10 * unit,
+        drawText(c, "‹", center, backY + 4 * unit,
                 32 * unit, WHITE, false, Paint.Align.CENTER);
     }
 
@@ -227,24 +232,41 @@ public class HomeView extends View {
     }
 
     private void drawHeader(Canvas c, float width) {
-        float logoCx = contentLeft + 22 * unit;
-        float logoCy = headerTop + 24 * unit;
-        float logoR = 20 * unit;
+        float logoCx = contentLeft + 25 * unit;
+        float logoCy = headerTop + 36 * unit;
+        float logoR = 23 * unit;
 
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.rgb(13, 12, 26));
+        paint.setColor(Color.rgb(5, 7, 18));
         c.drawCircle(logoCx, logoCy, logoR, paint);
+        if (logoBitmap != null) {
+            int logoSave = c.save();
+            Path logoClip = new Path();
+            logoClip.addCircle(logoCx, logoCy, logoR - 1.5f * unit, Path.Direction.CW);
+            c.clipPath(logoClip);
+            paint.setStyle(Paint.Style.FILL);
+            paint.setFilterBitmap(true);
+            c.drawBitmap(logoBitmap, null,
+                    new RectF(logoCx - logoR, logoCy - logoR,
+                            logoCx + logoR, logoCy + logoR), paint);
+            paint.setFilterBitmap(false);
+            c.restoreToCount(logoSave);
+        } else {
+            drawText(c, "AI", logoCx, logoCy + 5.5f * unit,
+                    14 * unit, GOLD, true, Paint.Align.CENTER);
+        }
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(1.8f * unit);
+        paint.setStrokeWidth(1.6f * unit);
+        paint.setColor(PURPLE);
+        paint.setShadowLayer(4 * unit, 0, 0, PURPLE);
+        c.drawCircle(logoCx, logoCy, logoR, paint);
+        paint.clearShadowLayer();
+        paint.setStrokeWidth(.9f * unit);
         paint.setColor(GOLD);
-        c.drawCircle(logoCx, logoCy, logoR - unit, paint);
-        paint.setStrokeWidth(.8f * unit);
-        c.drawCircle(logoCx, logoCy, logoR - 4 * unit, paint);
+        c.drawCircle(logoCx, logoCy, logoR - 3.5f * unit, paint);
         paint.setStyle(Paint.Style.FILL);
-        drawText(c, "AI", logoCx, logoCy + 5.5f * unit,
-                14 * unit, GOLD, true, Paint.Align.CENTER);
 
-        float titleX = contentLeft + 51 * unit;
+        float titleX = contentLeft + 70 * unit;
         drawText(c, "Alpha Hub", titleX, headerTop + 25 * unit,
                 25 * unit, CYAN, true, Paint.Align.LEFT);
         drawText(c, "Your All-in-One", titleX, headerTop + 45 * unit,
@@ -252,8 +274,8 @@ public class HomeView extends View {
         drawText(c, "Companion", titleX, headerTop + 63 * unit,
                 15.5f * unit, Color.rgb(60, 190, 255), true, Paint.Align.LEFT);
 
-        float settingsCx = contentRight - 20 * unit;
-        float starCx = contentRight - 64 * unit;
+        float settingsCx = contentRight - 25 * unit;
+        float starCx = contentRight - 70 * unit;
         float buttonCy = headerTop + 23 * unit;
         drawCircleButton(c, starCx, buttonCy, 18 * unit,
                 Color.rgb(5, 13, 38), PURPLE);
@@ -269,7 +291,7 @@ public class HomeView extends View {
         float left = contentLeft;
         float right = contentRight;
         float top = searchTop;
-        float bottom = top + 49 * unit;
+        float bottom = top + 55 * unit;
         drawCard(c, left, top, right, bottom, 20 * unit,
                 Color.rgb(5, 25, 61), BLUE, 1.5f * unit);
 
@@ -313,33 +335,33 @@ public class HomeView extends View {
                 SURFACE, BLUE, 1.15f * unit);
 
         drawSectionGlyph(c, left + 20 * unit, top + 22 * unit, icon);
-        drawText(c, title, left + 39 * unit, top + 26 * unit,
+        drawText(c, title, left + 39 * unit, top + 28 * unit,
                 13.5f * unit, CYAN, true, Paint.Align.LEFT);
-        drawText(c, "+ Add", right - 12 * unit, top + 26 * unit,
+        drawText(c, "+ Add", right - 12 * unit, top + 28 * unit,
                 13.5f * unit, MAGENTA, true, Paint.Align.RIGHT);
 
         if ("apps".equals(kind)) {
-            drawTileRow(c, labels, 4, left, right, top + 34 * unit,
-                    50 * unit, "app", false);
+            drawTileRow(c, labels, 4, left, right, top + 42 * unit,
+                    70 * unit, "app", false);
             float cx = (left + right) / 2f;
-            drawCard(c, cx - 31 * unit, top + 91 * unit,
-                    cx + 31 * unit, top + 114 * unit, 13 * unit,
+            drawCard(c, cx - 31 * unit, top + 120 * unit,
+                    cx + 31 * unit, top + 148 * unit, 13 * unit,
                     Color.rgb(5, 21, 50), BLUE, 1 * unit);
-            drawText(c, "View all", cx, top + 106.5f * unit,
+            drawText(c, "View all", cx, top + 139 * unit,
                     11.5f * unit, CYAN, true, Paint.Align.CENTER);
         } else if ("websites".equals(kind)) {
-            drawTileRow(c, labels, 3, left, right, top + 36 * unit,
-                    56 * unit, "web", false);
+            drawTileRow(c, labels, 3, left, right, top + 43 * unit,
+                    70 * unit, "web", false);
         } else if ("recent".equals(kind)) {
             String[] first = new String[]{labels[0], labels[1], labels[2], labels[3]};
             String[] second = new String[]{labels[4], labels[5], labels[6], labels[7]};
-            drawTileRow(c, first, 4, left, right, top + 34 * unit,
-                    51 * unit, "recent", false);
-            drawTileRow(c, second, 4, left, right, top + 91 * unit,
-                    51 * unit, "recent", false);
+            drawTileRow(c, first, 4, left, right, top + 42 * unit,
+                    60 * unit, "recent", false);
+            drawTileRow(c, second, 4, left, right, top + 111 * unit,
+                    60 * unit, "recent", false);
         } else if ("phone".equals(kind)) {
-            drawTileRow(c, labels, 3, left, right, top + 34 * unit,
-                    51 * unit, "setting", false);
+            drawTileRow(c, labels, 3, left, right, top + 33 * unit,
+                    49 * unit, "setting", false);
         }
     }
 
@@ -385,7 +407,7 @@ public class HomeView extends View {
                 TILE, Color.rgb(16, 117, 255), 1.1f * unit);
 
         float cx = (left + right) / 2f;
-        float iconSize = "web".equals(type) ? 31 * unit : 27 * unit;
+        float iconSize = 31 * unit;
         if ("setting".equals(type)) iconSize = 25 * unit;
 
         if ("setting".equals(type)) {
@@ -394,7 +416,7 @@ public class HomeView extends View {
             drawAppIcon(c, label, cx, top + 5 * unit, iconSize);
         }
 
-        float baseline = bottom - 6 * unit;
+        float baseline = bottom - 8 * unit;
         drawText(c, label, cx, baseline, 10.5f * unit,
                 WHITE, true, Paint.Align.CENTER);
 
@@ -716,7 +738,7 @@ public class HomeView extends View {
                 float y = event.getY();
 
                 // The back control and settings control both provide a reliable way to close the panel.
-                if ((x < railWidth && y > getHeight() - 72 * unit)
+                if ((x < railWidth && y > getHeight() - 125 * unit)
                         || (x > getWidth() - 47 * unit && y < headerTop + 50 * unit)) {
                     if (close != null) close.run();
                     performClick();
