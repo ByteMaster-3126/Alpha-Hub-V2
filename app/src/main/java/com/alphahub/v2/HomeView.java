@@ -29,9 +29,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class HomeView extends View {
-    private static final int BG = Color.rgb(2, 5, 15);
-    private static final int SURFACE = Color.rgb(5, 15, 36);
-    private static final int TILE = Color.rgb(6, 24, 56);
+    private static final int SURFACE = Color.argb(236, 5, 15, 36);
+    private static final int TILE = Color.argb(240, 6, 24, 56);
     private static final int CYAN = Color.rgb(0, 229, 255);
     private static final int BLUE = Color.rgb(21, 145, 255);
     private static final int PURPLE = Color.rgb(139, 92, 255);
@@ -107,7 +106,7 @@ public class HomeView extends View {
         bodyTop = searchTop + 55 * unit + 5 * unit;
         navTop = height - 75 * unit;
 
-        canvas.drawColor(BG);
+        // Keep the space around the two panels transparent so the phone wallpaper remains visible.
         drawMainFrame(canvas, width, height);
         drawSideRail(canvas, width, height);
         drawHeader(canvas, width);
@@ -150,7 +149,7 @@ public class HomeView extends View {
     private void drawMainFrame(Canvas c, float w, float h) {
         paint.setStyle(Paint.Style.FILL);
         paint.setShader(new LinearGradient(railWidth + 4 * unit, 0, w, h,
-                Color.rgb(5, 14, 37), Color.rgb(10, 5, 31), Shader.TileMode.CLAMP));
+                Color.argb(228, 5, 14, 37), Color.argb(228, 10, 5, 31), Shader.TileMode.CLAMP));
         c.drawRoundRect(railWidth + 4 * unit, 7 * unit, w - 7 * unit,
                 h - 7 * unit, 26 * unit, 26 * unit, paint);
         paint.setShader(null);
@@ -169,7 +168,7 @@ public class HomeView extends View {
         float left = 6 * unit;
         float right = railWidth - 6 * unit;
         drawCard(c, left, 9 * unit, right, h - 9 * unit,
-                25 * unit, Color.rgb(3, 9, 28), BLUE, 1.3f * unit);
+                25 * unit, Color.argb(228, 3, 9, 28), BLUE, 1.3f * unit);
 
         float center = (left + right) / 2f;
         float toolSize = 43 * unit;
@@ -200,7 +199,7 @@ public class HomeView extends View {
             float top = placeholderTop + i * step;
             drawCard(c, left + 11 * unit, top, right - 11 * unit,
                     top + placeholderH, 10 * unit,
-                    Color.rgb(7, 24, 55), Color.rgb(35, 77, 135), 1 * unit);
+                    Color.argb(235, 7, 24, 55), Color.rgb(35, 77, 135), 1 * unit);
         }
 
         float editCenterY = h * 0.755f;
@@ -293,7 +292,7 @@ public class HomeView extends View {
         float top = searchTop;
         float bottom = top + 55 * unit;
         drawCard(c, left, top, right, bottom, 20 * unit,
-                Color.rgb(5, 25, 61), BLUE, 1.5f * unit);
+                Color.argb(238, 5, 25, 61), BLUE, 1.5f * unit);
 
         float cx = left + 22 * unit;
         float cy = top + 24.5f * unit;
