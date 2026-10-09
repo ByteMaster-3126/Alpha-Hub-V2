@@ -286,10 +286,23 @@ public class HomeView extends View {
         drawText(c, "Universal Search", left + 45 * unit,
                 top + 30 * unit, 16.5f * unit,
                 MUTED, false, Paint.Align.LEFT);
-        drawText(c, "●", right - 20 * unit, top + 29 * unit,
-                11 * unit, MAGENTA, true, Paint.Align.CENTER);
-        drawText(c, "⌕", right - 20 * unit, top + 30 * unit,
-                18 * unit, MAGENTA, true, Paint.Align.CENTER);
+        float micX = right - 21 * unit;
+        float micY = top + 23 * unit;
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(MAGENTA);
+        c.drawRoundRect(micX - 3.2f * unit, micY - 8 * unit,
+                micX + 3.2f * unit, micY + 2 * unit,
+                3.2f * unit, 3.2f * unit, paint);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(1.8f * unit);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setColor(MAGENTA);
+        c.drawArc(new RectF(micX - 8 * unit, micY - 4 * unit,
+                micX + 8 * unit, micY + 9 * unit), 0, 180, false, paint);
+        c.drawLine(micX, micY + 9 * unit, micX, micY + 13 * unit, paint);
+        c.drawLine(micX - 5 * unit, micY + 13 * unit,
+                micX + 5 * unit, micY + 13 * unit, paint);
+        paint.setStyle(Paint.Style.FILL);
     }
 
     private void drawSection(Canvas c, float top, float height, String title,
