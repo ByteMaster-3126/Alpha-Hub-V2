@@ -98,7 +98,7 @@ public class HomeView extends View {
 
         // Scale the page to the available overlay height while respecting Android density.
         unit = Math.max(density * 0.72f, Math.min(density, height / 760.0f));
-        railWidth = Math.max(48 * unit, Math.min(102 * unit, width * 0.164f));
+        railWidth = Math.max(42 * unit, Math.min(86 * unit, width * 0.135f));
         contentLeft = railWidth + 13 * unit;
         contentRight = width - 15 * unit;
         headerTop = 12 * unit;
@@ -202,17 +202,24 @@ public class HomeView extends View {
                     Color.argb(235, 7, 24, 55), Color.rgb(35, 77, 135), 1 * unit);
         }
 
-        float editCenterY = h * 0.755f;
-        drawCircleButton(c, center, editCenterY, 24 * unit, Color.rgb(4, 21, 50), BLUE);
+        float editCenterY = h * 0.695f;
+        drawCircleButton(c, center, editCenterY, 23 * unit, Color.rgb(4, 21, 50), BLUE);
         drawText(c, "✎", center, editCenterY + 8 * unit,
-                27 * unit, WHITE, false, Paint.Align.CENTER);
-        drawText(c, "Edit", center, editCenterY + 47 * unit,
+                26 * unit, WHITE, false, Paint.Align.CENTER);
+        drawText(c, "Edit", center, editCenterY + 44 * unit,
                 13 * unit, WHITE, true, Paint.Align.CENTER);
 
-        float backY = h * 0.888f;
-        drawCircleButton(c, center, backY, 22 * unit, Color.rgb(8, 27, 61), BLUE);
+        // Forward control sits directly below Edit and scrolls the dashboard down.
+        float forwardY = h * 0.815f;
+        drawCircleButton(c, center, forwardY, 21 * unit, Color.rgb(8, 27, 61), BLUE);
+        drawText(c, "›", center, forwardY + 10 * unit,
+                30 * unit, WHITE, false, Paint.Align.CENTER);
+
+        // Back closes the dashboard and restores only the slim edge trigger.
+        float backY = h * 0.925f;
+        drawCircleButton(c, center, backY, 21 * unit, Color.rgb(8, 27, 61), BLUE);
         drawText(c, "‹", center, backY + 10 * unit,
-                32 * unit, WHITE, false, Paint.Align.CENTER);
+                30 * unit, WHITE, false, Paint.Align.CENTER);
     }
 
     private void drawSmallSquareIcon(Canvas c, float cx, float cy, float size) {
@@ -736,10 +743,21 @@ public class HomeView extends View {
                 float x = event.getX();
                 float y = event.getY();
 
-                // The back control and settings control both provide a reliable way to close the panel.
-                if ((x < railWidth && y > getHeight() - 125 * unit)
+                // The bottom back control closes the dashboard; the header settings control also closes it.
+                if ((x < railWidth && y > getHeight() - 100 * unit)
                         || (x > getWidth() - 47 * unit && y < headerTop + 50 * unit)) {
                     if (close != null) close.run();
+                    performClick();
+                    return true;
+                }
+
+                // Forward arrow is positioned between Edit and Back; move down through the page.
+                float forwardCenterY = getHeight() * 0.815f;
+                if (x < railWidth && y > forwardCenterY - 28 * unit
+                        && y < forwardCenterY + 28 * unit) {
+                    scrollY = Math.min(maxScroll,
+                            scrollY + Math.max(120 * unit, (navTop - bodyTop) * 0.72f));
+                    invalidate();
                     performClick();
                     return true;
                 }
