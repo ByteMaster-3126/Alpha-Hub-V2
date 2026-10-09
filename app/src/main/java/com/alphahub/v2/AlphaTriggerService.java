@@ -62,6 +62,9 @@ public class AlphaTriggerService extends Service {
             @Override public void onExpand() {
                 showHome();
             }
+            @Override public void onCollapse() {
+                showTrigger();
+            }
         });
 
         // Collapsed trigger: 2% of screen width, 10% of height, left edge,
@@ -80,9 +83,8 @@ public class AlphaTriggerService extends Service {
     private void showRail() {
         if (trigger == null) return;
         trigger.setRailMode(true);
-        int screenHeight = getResources().getDisplayMetrics().heightPixels;
-        WindowManager.LayoutParams p = params(dp(94),
-                Math.min(screenHeight - dp(20), dp(760)));
+        // Compact floating tool card matching the supplied screen recording.
+        WindowManager.LayoutParams p = params(dp(112), dp(236));
         p.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
         p.x = 0;
         p.y = 0;
@@ -105,7 +107,7 @@ public class AlphaTriggerService extends Service {
                 if (home != null) wm.removeView(home);
             } catch (RuntimeException ignored) { }
             home = null;
-            showTrigger();
+            showRail();
         });
 
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
