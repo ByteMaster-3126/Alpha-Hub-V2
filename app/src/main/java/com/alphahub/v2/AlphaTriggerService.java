@@ -1,12 +1,131 @@
 package com.alphahub.v2;
-import android.app.*;import android.content.*;import android.graphics.PixelFormat;import android.os.*;import android.view.*;
-public class AlphaTriggerService extends Service{
- WindowManager wm; TriggerView trigger; HomeView home; int dp(int n){return(int)(n*getResources().getDisplayMetrics().density+.5f);}
- public void onCreate(){super.onCreate();channel();startForeground(1001,notification());wm=(WindowManager)getSystemService(WINDOW_SERVICE);showTrigger();}
- void channel(){if(Build.VERSION.SDK_INT>=26)((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(new NotificationChannel("alpha","Alpha Hub",NotificationManager.IMPORTANCE_LOW));}
- Notification notification(){return new Notification.Builder(this,"alpha").setContentTitle("Alpha Hub").setContentText("Edge trigger is active").setSmallIcon(android.R.drawable.ic_menu_view).setOngoing(true).build();}
- WindowManager.LayoutParams lp(int w,int h){int type=Build.VERSION.SDK_INT>=26?WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY:WindowManager.LayoutParams.TYPE_PHONE;return new WindowManager.LayoutParams(w,h,type,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,PixelFormat.TRANSLUCENT);}
- void showTrigger(){trigger=new TriggerView(this,new TriggerView.Listener(){public void onOpenRail(){showHome();}public void onExpand(){showHome();}});WindowManager.LayoutParams p=lp(dp(94),dp(560));p.gravity=Gravity.START|Gravity.CENTER_VERTICAL;wm.addView(trigger,p);}
- void showHome(){try{wm.removeView(trigger);}catch(Exception e){}home=new HomeView(this,()->{try{wm.removeView(home);}catch(Exception e){}showTrigger();});WindowManager.LayoutParams p=lp(Math.min(getResources().getDisplayMetrics().widthPixels-dp(12),dp(760)),Math.min(getResources().getDisplayMetrics().heightPixels-dp(20),dp(1160)));p.gravity=Gravity.CENTER;wm.addView(home,p);}
- public IBinder onBind(Intent i){return null;}public void onDestroy(){try{if(trigger!=null)wm.removeView(trigger);}catch(Exception e){}try{if(home!=null)wm.removeView(home);}catch(Exception e){}super.onDestroy();}
+
+import android.app.*;
+import android.content.*;
+import android.graphics.PixelFormat;
+import android.os.*;
+import android.view.*;
+
+public class AlphaTriggerService extends Service {
+    private WindowManager wm;
+    private TriggerView trigger;
+    private HomeView home;
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        channel();
+        startForeground(1001, notification());
+        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        showTrigger();
+    }
+
+    private void channel() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE))
+                    .createNotificationChannel(new NotificationChannel(
+                            "alpha", "Alpha Hub", NotificationManager.IMPORTANCE_LOW));
+        }
+    }
+
+    private Notification notification() {
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(this, "alpha")
+                : new Notification.Builder(this);
+        return builder.setContentTitle("Alpha Hub")
+                .setContentText("Edge trigger is active")
+                .setSmallIcon(android.R.drawable.ic_menu_view)
+                .setOngoing(true)
+                .build();
+    }
+
+    private WindowManager.LayoutParams params(int width, int height) {
+        int type = Build.VERSION.SDK_INT >= 26
+                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                : WindowManager.LayoutParams.TYPE_PHONE;
+        return new WindowManager.LayoutParams(width, height, type,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT);
+    }
+
+    private void showTrigger() {
+        trigger = new TriggerView(this, new TriggerView.Listener() {
+            @Override public void onOpenRail() {
+                showRail();
+            }
+            @Override public void onExpand() {
+                showHome();
+            }
+        });
+
+        // Collapsed trigger: 2% of screen width, 10% of height, left edge,
+        // vertically positioned around 48% of screen height.
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        int width = Math.max(dp(8), Math.round(screenWidth * 0.02f));
+        int height = Math.max(dp(56), Math.round(screenHeight * 0.10f));
+        WindowManager.LayoutParams p = params(width, height);
+        p.gravity = Gravity.START | Gravity.TOP;
+        p.x = 0;
+        p.y = Math.round(screenHeight * 0.43f);
+        wm.addView(trigger, p);
+    }
+
+    private void showRail() {
+        if (trigger == null) return;
+        trigger.setRailMode(true);
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        WindowManager.LayoutParams p = params(dp(94),
+                Math.min(screenHeight - dp(20), dp(760)));
+        p.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
+        p.x = 0;
+        p.y = 0;
+        try {
+            wm.updateViewLayout(trigger, p);
+        } catch (RuntimeException ignored) {
+            // If Android has detached the overlay, restore the compact trigger safely.
+            try { wm.removeView(trigger); } catch (RuntimeException ignoredAgain) { }
+            showTrigger();
+        }
+    }
+
+    private void showHome() {
+        try {
+            if (trigger != null) wm.removeView(trigger);
+        } catch (RuntimeException ignored) { }
+
+        home = new HomeView(this, () -> {
+            try {
+                if (home != null) wm.removeView(home);
+            } catch (RuntimeException ignored) { }
+            home = null;
+            showTrigger();
+        });
+
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        WindowManager.LayoutParams p = params(
+                Math.min(screenWidth - dp(12), dp(760)),
+                Math.min(screenHeight - dp(20), dp(1160)));
+        p.gravity = Gravity.CENTER;
+        wm.addView(home, p);
+    }
+
+    @Override public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override public void onDestroy() {
+        try { if (trigger != null) wm.removeView(trigger); }
+        catch (RuntimeException ignored) { }
+        try { if (home != null) wm.removeView(home); }
+        catch (RuntimeException ignored) { }
+        super.onDestroy();
+    }
 }
