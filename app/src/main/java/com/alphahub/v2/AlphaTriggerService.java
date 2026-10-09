@@ -15,8 +15,7 @@ public class AlphaTriggerService extends Service {
         return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
-    @Override
-    public void onCreate() {
+    @Override public void onCreate() {
         super.onCreate();
         channel();
         startForeground(1001, notification());
@@ -54,21 +53,18 @@ public class AlphaTriggerService extends Service {
                 PixelFormat.TRANSLUCENT);
     }
 
+    /** Stage 1: the transparent slim handle at the left edge, vertically centered at about 48%. */
     private void showTrigger() {
+        if (trigger != null) {
+            try { wm.removeView(trigger); } catch (RuntimeException ignored) { }
+        }
+
         trigger = new TriggerView(this, new TriggerView.Listener() {
-            @Override public void onOpenRail() {
-                showRail();
-            }
-            @Override public void onExpand() {
-                showHome();
-            }
-            @Override public void onCollapse() {
-                showTrigger();
-            }
+            @Override public void onOpenRail() { showRail(); }
+            @Override public void onExpand() { showHome(); }
+            @Override public void onCollapse() { collapseToEdge(); }
         });
 
-        // Collapsed trigger: 2% of screen width, 10% of height, left edge,
-        // vertically positioned around 48% of screen height.
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
         int screenHeight = getResources().getDisplayMetrics().heightPixels;
         int width = Math.max(dp(8), Math.round(screenWidth * 0.02f));
@@ -80,43 +76,66 @@ public class AlphaTriggerService extends Service {
         wm.addView(trigger, p);
     }
 
+    /** Stage 2: compact floating panel, sized to match the supplied recording. */
     private void showRail() {
         if (trigger == null) return;
         trigger.setRailMode(true);
-        // Compact floating tool card matching the supplied screen recording.
-        WindowManager.LayoutParams p = params(dp(112), dp(236));
+        WindowManager.LayoutParams p = params(dp(96), dp(250));
         p.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
         p.x = 0;
         p.y = 0;
         try {
             wm.updateViewLayout(trigger, p);
         } catch (RuntimeException ignored) {
-            // If Android has detached the overlay, restore the compact trigger safely.
             try { wm.removeView(trigger); } catch (RuntimeException ignoredAgain) { }
+            trigger = null;
             showTrigger();
         }
     }
 
+    /** The bottom chevron collapses the compact panel back to the edge handle. */
+    private void collapseToEdge() {
+        if (trigger == null) return;
+        trigger.setRailMode(false);
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        int width = Math.max(dp(8), Math.round(screenWidth * 0.02f));
+        int height = Math.max(dp(56), Math.round(screenHeight * 0.10f));
+        WindowManager.LayoutParams p = params(width, height);
+        p.gravity = Gravity.START | Gravity.TOP;
+        p.x = 0;
+        p.y = Math.round(screenHeight * 0.43f);
+        try {
+            wm.updateViewLayout(trigger, p);
+        } catch (RuntimeException ignored) {
+            try { wm.removeView(trigger); } catch (RuntimeException ignoredAgain) { }
+            trigger = null;
+            showTrigger();
+        }
+    }
+
+    /** Stage 3: the full reference dashboard with its own persistent left rail. */
     private void showHome() {
         try {
             if (trigger != null) wm.removeView(trigger);
         } catch (RuntimeException ignored) { }
+        trigger = null;
 
         home = new HomeView(this, () -> {
             try {
                 if (home != null) wm.removeView(home);
             } catch (RuntimeException ignored) { }
             home = null;
-            // Recreate the compact panel after the dashboard view was detached.
             showTrigger();
             showRail();
         });
 
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
         int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        // Match the reference panel's breathing room above/below the system bars.
         WindowManager.LayoutParams p = params(
-                Math.min(screenWidth - dp(12), dp(760)),
-                Math.min(screenHeight - dp(20), dp(1160)));
+                Math.min(screenWidth - dp(4), dp(760)),
+                Math.min(screenHeight - dp(70), dp(1160)));
         p.gravity = Gravity.CENTER;
         wm.addView(home, p);
     }
