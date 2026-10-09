@@ -7,22 +7,18 @@ import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.View;
 
-/**
- * Compact edge handle. The collapsed state is a slim transparent touch target;
- * opening it reveals the utility rail. Any tap on the rail opens the dashboard.
- */
+/** Three-state edge launcher: slim edge handle, compact tool bubble, full dashboard. */
 public class TriggerView extends View {
     interface Listener {
         void onOpenRail();
         void onExpand();
+        void onCollapse();
     }
 
     private final Listener listener;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float density;
-    private float downX;
-    private float downY;
-    private long downTime;
+    private float downX, downY;
     private boolean rail;
 
     TriggerView(Context context, Listener listener) {
@@ -34,100 +30,80 @@ public class TriggerView extends View {
         setClickable(true);
     }
 
-    private void rounded(Canvas canvas, float left, float top, float right,
-                         float bottom, float radius, int color) {
+    private void rounded(Canvas c, float l, float t, float r, float b,
+                         float radius, int color) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(color);
-        canvas.drawRoundRect(left, top, right, bottom, radius, radius, paint);
+        c.drawRoundRect(l, t, r, b, radius, radius, paint);
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        float width = getWidth();
-        float height = getHeight();
-
-        if (!rail) {
-            // Transparent handle with a very subtle outline; deliberately no arrow.
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(Math.max(1f, density * 0.7f));
-            paint.setColor(Color.argb(155, 225, 239, 255));
-            float inset = Math.max(1f, density * 0.5f);
-            canvas.drawRoundRect(inset, height * 0.08f,
-                    Math.max(inset + 1f, width - inset), height * 0.92f,
-                    width / 2f, width / 2f, paint);
-            paint.setStyle(Paint.Style.FILL);
-            return;
-        }
-
-        rounded(canvas, 0, 0, width, height, 28 * density,
-                Color.rgb(17, 20, 31));
-        rounded(canvas, 14 * density, 20 * density,
-                width - 14 * density, 126 * density, 20 * density,
-                Color.rgb(17, 31, 60));
-        rounded(canvas, 25 * density, 30 * density,
-                81 * density, 86 * density, 12 * density,
-                Color.rgb(25, 125, 255));
-        text(canvas, "A", 53 * density, 70 * density,
-                28 * density, Color.WHITE);
-        text(canvas, "Screen", width / 2, 100 * density,
-                14 * density, Color.WHITE);
-        text(canvas, "translation", width / 2, 118 * density,
-                13 * density, Color.WHITE);
-
-        for (int i = 0; i < 5; i++) {
-            rounded(canvas, 25 * density, (145 + i * 68) * density,
-                    81 * density, (195 + i * 68) * density, 12 * density,
-                    Color.rgb(24, 43, 78));
-        }
-        rounded(canvas, 22 * density, height - 112 * density,
-                84 * density, height - 58 * density, 27 * density,
-                Color.rgb(28, 43, 68));
-        text(canvas, "✎", 53 * density, height - 76 * density,
-                27 * density, Color.WHITE);
-        text(canvas, "Edit", 53 * density, height - 38 * density,
-                13 * density, Color.WHITE);
-        rounded(canvas, 22 * density, height - 50 * density,
-                84 * density, height + 2 * density, 26 * density,
-                Color.rgb(25, 50, 90));
-        text(canvas, "‹", 53 * density, height - 16 * density,
-                30 * density, Color.WHITE);
-    }
-
-    private void text(Canvas canvas, String value, float x, float y,
-                      float size, int color) {
+    private void text(Canvas c, String s, float x, float y, float size, int color) {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(color);
         paint.setTextSize(size);
         paint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText(value, x, y, paint);
+        c.drawText(s, x, y, paint);
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    @Override protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        float w = getWidth(), h = getHeight();
+        if (!rail) {
+            // Reference collapsed trigger: narrow, transparent, left-edge pill, no arrow.
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(Math.max(1f, density * .7f));
+            paint.setColor(Color.argb(155, 225, 239, 255));
+            float inset = Math.max(1f, density * .5f);
+            canvas.drawRoundRect(inset, h * .08f, Math.max(inset + 1, w - inset),
+                    h * .92f, w / 2f, w / 2f, paint);
+            paint.setStyle(Paint.Style.FILL);
+            return;
+        }
+
+        // Compact launcher bubble as seen in the recording, not the full-height rail.
+        rounded(canvas, 0, 0, w, h, 20 * density, Color.rgb(22, 25, 35));
+        rounded(canvas, 10 * density, 12 * density, w - 10 * density,
+                104 * density, 15 * density, Color.rgb(17, 36, 72));
+        rounded(canvas, 22 * density, 23 * density, w - 22 * density,
+                68 * density, 10 * density, Color.rgb(25, 125, 255));
+        text(canvas, "A", w / 2f, 53 * density, 25 * density, Color.WHITE);
+        text(canvas, "Screen", w / 2f, 83 * density, 13 * density, Color.WHITE);
+        text(canvas, "translation", w / 2f, 99 * density, 12 * density, Color.WHITE);
+
+        for (int i = 0; i < 3; i++) {
+            rounded(canvas, 22 * density, (120 + i * 28) * density,
+                    w - 22 * density, (139 + i * 28) * density,
+                    7 * density, Color.rgb(24, 43, 78));
+        }
+        rounded(canvas, 17 * density, h - 47 * density,
+                w - 17 * density, h - 8 * density, 19 * density,
+                Color.rgb(28, 43, 68));
+        text(canvas, "‹", w / 2f, h - 19 * density, 27 * density, Color.WHITE);
+    }
+
+    @Override public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             downX = event.getX();
             downY = event.getY();
-            downTime = System.currentTimeMillis();
             return true;
         }
         if (event.getAction() == MotionEvent.ACTION_UP) {
             float dx = event.getX() - downX;
             float dy = event.getY() - downY;
             if (!rail) {
-                // A simple tap or inward edge swipe reveals the rail.
+                // Tap or swipe inward opens the compact floating launcher.
                 if (Math.abs(dx) < 24 * density || dx > 0) {
                     rail = true;
                     invalidate();
                     listener.onOpenRail();
                 }
-            } else {
-                // Tapping the rail or swiping inward opens the complete dashboard.
-                if (Math.abs(dx) < 24 * density || dx > 0
-                        || System.currentTimeMillis() - downTime < 900
-                        || Math.abs(dy) > 24 * density) {
-                    listener.onExpand();
-                }
+            } else if (event.getY() >= getHeight() - 54 * density) {
+                // Bottom chevron returns to the slim edge trigger.
+                listener.onCollapse();
+            } else if (Math.abs(dx) < 24 * density || dx > 0
+                    || Math.abs(dy) > 24 * density) {
+                // Tap the compact tool card to expand the dashboard.
+                listener.onExpand();
             }
             performClick();
             return true;
@@ -135,8 +111,7 @@ public class TriggerView extends View {
         return true;
     }
 
-    @Override
-    public boolean performClick() {
+    @Override public boolean performClick() {
         super.performClick();
         return true;
     }
