@@ -188,14 +188,14 @@ public class HomeView extends View {
                 11 * unit, Color.rgb(5, 22, 49), BLUE, 1.3f * unit);
         drawText(c, "文A", center, translateTop + 26 * unit,
                 21 * unit, CYAN, false, Paint.Align.CENTER);
-        drawText(c, "Screen", center, translateTop + translateSize + 18 * unit,
+        drawText(c, "Screen", center, translateTop + translateSize + 27 * unit,
                 11.5f * unit, WHITE, true, Paint.Align.CENTER);
-        drawText(c, "translation", center, translateTop + translateSize + 33 * unit,
+        drawText(c, "translation", center, translateTop + translateSize + 41 * unit,
                 10.5f * unit, WHITE, true, Paint.Align.CENTER);
 
-        float placeholderTop = translateTop + translateSize + 70 * unit;
-        float placeholderH = 48 * unit;
-        float step = 75 * unit;
+        float placeholderTop = translateTop + translateSize + 74 * unit;
+        float placeholderH = 44 * unit;
+        float step = 79 * unit;
         for (int i = 0; i < 5; i++) {
             float top = placeholderTop + i * step;
             drawCard(c, left + 11 * unit, top, right - 11 * unit,
@@ -207,12 +207,12 @@ public class HomeView extends View {
         drawCircleButton(c, center, editCenterY, 24 * unit, Color.rgb(4, 21, 50), BLUE);
         drawText(c, "✎", center, editCenterY + 8 * unit,
                 27 * unit, WHITE, false, Paint.Align.CENTER);
-        drawText(c, "Edit", center, editCenterY + 35 * unit,
+        drawText(c, "Edit", center, editCenterY + 47 * unit,
                 13 * unit, WHITE, true, Paint.Align.CENTER);
 
         float backY = h * 0.888f;
         drawCircleButton(c, center, backY, 22 * unit, Color.rgb(8, 27, 61), BLUE);
-        drawText(c, "‹", center, backY + 4 * unit,
+        drawText(c, "‹", center, backY + 10 * unit,
                 32 * unit, WHITE, false, Paint.Align.CENTER);
     }
 
