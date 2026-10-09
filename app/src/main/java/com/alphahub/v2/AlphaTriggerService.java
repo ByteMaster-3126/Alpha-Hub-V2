@@ -80,10 +80,12 @@ public class AlphaTriggerService extends Service {
     private void showRail() {
         if (trigger == null) return;
         trigger.setRailMode(true);
-        WindowManager.LayoutParams p = params(dp(96), dp(250));
-        p.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        WindowManager.LayoutParams p = params(dp(84), dp(215));
+        p.gravity = Gravity.START | Gravity.TOP;
         p.x = 0;
-        p.y = 0;
+        // The recording shows this compact preview appearing in the lower-left area.
+        p.y = Math.round(screenHeight * 0.59f);
         try {
             wm.updateViewLayout(trigger, p);
         } catch (RuntimeException ignored) {
