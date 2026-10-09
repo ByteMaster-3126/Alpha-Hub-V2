@@ -58,10 +58,13 @@ public class HomeView extends View {
     private float navTop;
     private float maxScroll;
     private float scrollY;
+    private float railScrollY;
+    private float maxRailScroll;
     private float downX;
     private float downY;
     private float lastY;
     private boolean dragging;
+    private boolean railDragging;
 
     private static final class HitTarget {
         final RectF bounds;
@@ -167,10 +170,25 @@ public class HomeView extends View {
     private void drawSideRail(Canvas c, float w, float h) {
         float left = 6 * unit;
         float right = railWidth - 6 * unit;
-        drawCard(c, left, 9 * unit, right, h - 9 * unit,
+        float top = 9 * unit;
+        float bottom = h - 9 * unit;
+        drawCard(c, left, top, right, bottom,
                 25 * unit, Color.argb(228, 3, 9, 28), BLUE, 1.3f * unit);
 
         float center = (left + right) / 2f;
+        float editCenterY = h * 0.695f;
+        float railClipTop = 15 * unit;
+        float railClipBottom = editCenterY - 36 * unit;
+        float railContentHeight = 27 * unit + 43 * unit + 19 * unit
+                + 25 * unit + 113 * unit + 38 * unit + 41 * unit
+                + 74 * unit + 5 * 79 * unit + 44 * unit;
+        maxRailScroll = Math.max(0, railContentHeight - (railClipBottom - railClipTop));
+        railScrollY = Math.max(0, Math.min(railScrollY, maxRailScroll));
+
+        int save = c.save();
+        c.clipRect(left + 1 * unit, railClipTop, right - 1 * unit, railClipBottom);
+        c.translate(0, -railScrollY);
+
         float toolSize = 43 * unit;
         float toolTop = 27 * unit;
         drawCard(c, center - toolSize / 2, toolTop,
@@ -196,26 +214,25 @@ public class HomeView extends View {
         float placeholderH = 44 * unit;
         float step = 79 * unit;
         for (int i = 0; i < 5; i++) {
-            float top = placeholderTop + i * step;
-            drawCard(c, left + 11 * unit, top, right - 11 * unit,
-                    top + placeholderH, 10 * unit,
+            float itemTop = placeholderTop + i * step;
+            drawCard(c, left + 11 * unit, itemTop, right - 11 * unit,
+                    itemTop + placeholderH, 10 * unit,
                     Color.argb(235, 7, 24, 55), Color.rgb(35, 77, 135), 1 * unit);
         }
+        c.restoreToCount(save);
 
-        float editCenterY = h * 0.695f;
+        // Keep Edit and the two navigation controls fixed while the rail's tool list scrolls.
         drawCircleButton(c, center, editCenterY, 23 * unit, Color.rgb(4, 21, 50), BLUE);
         drawText(c, "✎", center, editCenterY + 8 * unit,
                 26 * unit, WHITE, false, Paint.Align.CENTER);
         drawText(c, "Edit", center, editCenterY + 44 * unit,
                 13 * unit, WHITE, true, Paint.Align.CENTER);
 
-        // Forward control sits directly below Edit and scrolls the dashboard down.
         float forwardY = h * 0.815f;
         drawCircleButton(c, center, forwardY, 21 * unit, Color.rgb(8, 27, 61), BLUE);
-        drawText(c, "›", center, forwardY + 10 * unit,
-                30 * unit, WHITE, false, Paint.Align.CENTER);
+        drawText(c, "»", center, forwardY + 8 * unit,
+                23 * unit, WHITE, true, Paint.Align.CENTER);
 
-        // Back closes the dashboard and restores only the slim edge trigger.
         float backY = h * 0.925f;
         drawCircleButton(c, center, backY, 21 * unit, Color.rgb(8, 27, 61), BLUE);
         drawText(c, "‹", center, backY + 10 * unit,
@@ -341,20 +358,34 @@ public class HomeView extends View {
                 SURFACE, BLUE, 1.15f * unit);
 
         drawSectionGlyph(c, left + 20 * unit, top + 22 * unit, icon);
-        drawText(c, title, left + 39 * unit, top + 28 * unit,
-                13.5f * unit, CYAN, true, Paint.Align.LEFT);
-        drawText(c, "+ Add", right - 12 * unit, top + 28 * unit,
-                13.5f * unit, MAGENTA, true, Paint.Align.RIGHT);
+        boolean hasViewAll = "apps".equals(kind) || "websites".equals(kind) || "recent".equals(kind);
+        float actionY = top + 28 * unit;
+        float viewRight = right - 9 * unit;
+        float viewWidth = 62 * unit;
+        if (hasViewAll) {
+            drawCard(c, viewRight - viewWidth, top + 8 * unit, viewRight,
+                    top + 32 * unit, 12 * unit, Color.rgb(4, 24, 56), CYAN, 1.1f * unit);
+            drawText(c, "View all  ›", viewRight - viewWidth / 2f,
+                    top + 24 * unit, 10.5f * unit, CYAN, true, Paint.Align.CENTER);
+            hitTargets.add(new HitTarget(new RectF(viewRight - viewWidth, top + 8 * unit,
+                    viewRight, top + 32 * unit), "VIEWALL", kind));
+        }
+        float addRight = hasViewAll ? viewRight - viewWidth - 7 * unit : right - 10 * unit;
+        float addWidth = 57 * unit;
+        drawCard(c, addRight - addWidth, top + 8 * unit, addRight,
+                top + 32 * unit, 12 * unit, Color.rgb(18, 8, 48), MAGENTA, 1.1f * unit);
+        drawText(c, "+ Add", addRight - addWidth / 2f, actionY - 2 * unit,
+                11.5f * unit, MAGENTA, true, Paint.Align.CENTER);
+        hitTargets.add(new HitTarget(new RectF(addRight - addWidth, top + 8 * unit,
+                addRight, top + 32 * unit), "ADD", kind));
+
+        // Reserve the right-hand action area so section titles never collide with buttons.
+        drawText(c, title, left + 39 * unit, actionY,
+                12.8f * unit, CYAN, true, Paint.Align.LEFT);
 
         if ("apps".equals(kind)) {
             drawTileRow(c, labels, 4, left, right, top + 42 * unit,
                     70 * unit, "app", false);
-            float cx = (left + right) / 2f;
-            drawCard(c, cx - 31 * unit, top + 120 * unit,
-                    cx + 31 * unit, top + 148 * unit, 13 * unit,
-                    Color.rgb(5, 21, 50), BLUE, 1 * unit);
-            drawText(c, "View all", cx, top + 139 * unit,
-                    11.5f * unit, CYAN, true, Paint.Align.CENTER);
         } else if ("websites".equals(kind)) {
             drawTileRow(c, labels, 3, left, right, top + 43 * unit,
                     70 * unit, "web", false);
@@ -719,15 +750,26 @@ public class HomeView extends View {
 
             case MotionEvent.ACTION_MOVE:
                 float deltaY = event.getY() - lastY;
-                if (!dragging
-                        && Math.abs(event.getY() - downY) > touchSlop
-                        && downX >= railWidth
-                        && downY >= bodyTop
-                        && downY < navTop - 5 * unit) {
-                    dragging = true;
+                if (!dragging && Math.abs(event.getY() - downY) > touchSlop) {
+                    if (downX < railWidth
+                            && downY > 12 * unit
+                            && downY < getHeight() * 0.66f
+                            && maxRailScroll > 0) {
+                        dragging = true;
+                        railDragging = true;
+                    } else if (downX >= railWidth
+                            && downY >= bodyTop
+                            && downY < navTop - 5 * unit) {
+                        dragging = true;
+                        railDragging = false;
+                    }
                 }
                 if (dragging) {
-                    scrollY = Math.max(0, Math.min(maxScroll, scrollY - deltaY));
+                    if (railDragging) {
+                        railScrollY = Math.max(0, Math.min(maxRailScroll, railScrollY - deltaY));
+                    } else {
+                        scrollY = Math.max(0, Math.min(maxScroll, scrollY - deltaY));
+                    }
                     invalidate();
                 }
                 lastY = event.getY();
@@ -736,6 +778,7 @@ public class HomeView extends View {
             case MotionEvent.ACTION_UP:
                 if (dragging) {
                     dragging = false;
+                    railDragging = false;
                     performClick();
                     return true;
                 }
@@ -782,6 +825,16 @@ public class HomeView extends View {
 
     private void launchTarget(HitTarget target) {
         try {
+            if ("ADD".equals(target.action)) {
+                Toast.makeText(getContext(), "Add to " + target.label,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if ("VIEWALL".equals(target.action)) {
+                Toast.makeText(getContext(), "View all " + target.label,
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
             if ("WEB".equals(target.action)) {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUrl(target.label)));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
