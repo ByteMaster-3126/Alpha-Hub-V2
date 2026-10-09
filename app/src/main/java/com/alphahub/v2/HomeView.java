@@ -169,7 +169,7 @@ public class HomeView extends View {
         float left = 6 * unit;
         float right = railWidth - 6 * unit;
         drawCard(c, left, 9 * unit, right, h - 9 * unit,
-                25 * unit, Color.rgb(3, 9, 28), WHITE, 1.3f * unit);
+                25 * unit, Color.rgb(3, 9, 28), BLUE, 1.3f * unit);
 
         float center = (left + right) / 2f;
         float toolSize = 43 * unit;
@@ -198,7 +198,7 @@ public class HomeView extends View {
         float step = 75 * unit;
         for (int i = 0; i < 5; i++) {
             float top = placeholderTop + i * step;
-            drawCard(c, left + 6 * unit, top, right - 6 * unit,
+            drawCard(c, left + 11 * unit, top, right - 11 * unit,
                     top + placeholderH, 10 * unit,
                     Color.rgb(7, 24, 55), Color.rgb(35, 77, 135), 1 * unit);
         }
