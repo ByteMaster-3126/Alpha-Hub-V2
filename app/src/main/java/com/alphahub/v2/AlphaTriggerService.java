@@ -107,6 +107,8 @@ public class AlphaTriggerService extends Service {
                 if (home != null) wm.removeView(home);
             } catch (RuntimeException ignored) { }
             home = null;
+            // Recreate the compact panel after the dashboard view was detached.
+            showTrigger();
             showRail();
         });
 
