@@ -128,8 +128,8 @@ public class AlphaTriggerService extends Service {
                 if (home != null) wm.removeView(home);
             } catch (RuntimeException ignored) { }
             home = null;
+            // Return to the slim edge trigger only. Do not reopen the compact trigger rail.
             showTrigger();
-            showRail();
         });
 
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
