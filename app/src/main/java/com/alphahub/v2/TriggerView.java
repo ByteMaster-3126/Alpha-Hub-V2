@@ -61,24 +61,23 @@ public class TriggerView extends View {
         }
 
         // Compact launcher bubble as seen in the recording, not the full-height rail.
-        rounded(canvas, 0, 0, w, h, 20 * density, Color.rgb(22, 25, 35));
+        rounded(canvas, 0, 0, w, h, 20 * density, Color.rgb(45, 45, 45));
         rounded(canvas, 10 * density, 12 * density, w - 10 * density,
-                104 * density, 15 * density, Color.rgb(17, 36, 72));
+                104 * density, 15 * density, Color.rgb(48, 48, 48));
         rounded(canvas, 22 * density, 23 * density, w - 22 * density,
                 68 * density, 10 * density, Color.rgb(25, 125, 255));
         text(canvas, "A", w / 2f, 53 * density, 25 * density, Color.WHITE);
         text(canvas, "Screen", w / 2f, 83 * density, 13 * density, Color.WHITE);
         text(canvas, "translation", w / 2f, 99 * density, 12 * density, Color.WHITE);
 
-        for (int i = 0; i < 3; i++) {
-            rounded(canvas, 22 * density, (120 + i * 28) * density,
-                    w - 22 * density, (139 + i * 28) * density,
-                    7 * density, Color.rgb(24, 43, 78));
-        }
+        // Empty space is intentionally quiet, as in the original floating preview.
+        rounded(canvas, 18 * density, 116 * density,
+                w - 18 * density, h - 60 * density,
+                10 * density, Color.rgb(42, 42, 42));
         rounded(canvas, 17 * density, h - 47 * density,
                 w - 17 * density, h - 8 * density, 19 * density,
-                Color.rgb(28, 43, 68));
-        text(canvas, "‹", w / 2f, h - 19 * density, 27 * density, Color.WHITE);
+                Color.rgb(88, 88, 88));
+        text(canvas, "›", w / 2f, h - 19 * density, 27 * density, Color.WHITE);
     }
 
     @Override public boolean onTouchEvent(MotionEvent event) {
@@ -97,12 +96,11 @@ public class TriggerView extends View {
                     invalidate();
                     listener.onOpenRail();
                 }
-            } else if (event.getY() >= getHeight() - 54 * density) {
-                // Bottom chevron returns to the slim edge trigger.
+            } else if (dx < -24 * density) {
+                // Swipe outward to hide the preview and restore the edge handle.
                 listener.onCollapse();
-            } else if (Math.abs(dx) < 24 * density || dx > 0
-                    || Math.abs(dy) > 24 * density) {
-                // Tap the compact tool card to expand the dashboard.
+            } else {
+                // Tapping the right chevron or preview opens the full dashboard.
                 listener.onExpand();
             }
             performClick();
